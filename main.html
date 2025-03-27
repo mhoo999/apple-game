@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사과 게임</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 60px);
+            gap: 5px;
+            margin: 20px auto;
+            width: 320px;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            background-color: red;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            user-select: none;
+        }
+        .selected {
+            background-color: orange;
+        }
+        #score {
+            font-size: 24px;
+        }
+        #timer {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+        #start, #restart {
+            font-size: 18px;
+            padding: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>사과 게임 🍎</h1>
+    <p id="score">점수: 0</p>
+    <p id="timer">남은 시간: <span id="time">30</span>초</p>
+    <div id="game-board"></div>
+    <button id="start">게임 시작</button>
+    <button id="restart" style="display:none;">다시 시작</button>
+    <script>
+        const size = 5;
+        let score = 0;
+        let timeLeft = 30;
+        let selectedCells = [];
+        let gameBoard = document.getElementById("game-board");
+        let scoreDisplay = document.getElementById("score");
+        let timerDisplay = document.getElementById("time");
+        let startButton = document.getElementById("start");
+        let restartButton = document.getElementById("restart");
+        let timer;
+        let gameStarted = false;
+
+        function initializeBoard() {
+            gameBoard.innerHTML = "";
+            for (let i = 0; i < size * size; i++) {
+                let cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.textContent = "0";
+                cell.addEventListener("click", () => {
+                    if (gameStarted) selectCell(cell);
+                });
+                gameBoard.appendChild(cell);
+            }
+        }
+
+        function startGame() {
+            gameStarted = true;
+            startButton.style.display = "none";
+            restartButton.style.display = "inline";
+            generateBoard();
+            startTimer();
+        }
+
+        function generateBoard() {
+            gameBoard.innerHTML = "";
+            for (let i = 0; i < size * size; i++) {
+                let cell = document.createElement("div");
+                cell.classList.add("cell");
+                cell.textContent = Math.floor(Math.random() * 9) + 1;
+                cell.addEventListener("click", () => selectCell(cell));
+                gameBoard.appendChild(cell);
+            }
+        }
+
+        function selectCell(cell) {
+            if (!selectedCells.includes(cell)) {
+                selectedCells.push(cell);
+                cell.classList.add("selected");
+                checkSum();
+            }
+        }
+
+        function checkSum() {
+            let sum = selectedCells.reduce((acc, cell) => acc + parseInt(cell.textContent), 0);
+            if (sum === 10) {
+                score += 10;
+                scoreDisplay.textContent = `점수: ${score}`;
+                selectedCells.forEach(cell => {
+                    cell.textContent = Math.floor(Math.random() * 9) + 1;
+                    cell.classList.remove("selected");
+                });
+                selectedCells = [];
+            } else if (sum > 10) {
+                selectedCells.forEach(cell => cell.classList.remove("selected"));
+                selectedCells = [];
+            }
+        }
+
+        function startTimer() {
+            timeLeft = 30;
+            timerDisplay.textContent = timeLeft;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert(`게임 종료! 최종 점수: ${score}`);
+                }
+            }, 1000);
+        }
+
+        function restartGame() {
+            score = 0;
+            scoreDisplay.textContent = `점수: ${score}`;
+            selectedCells = [];
+            gameStarted = false;
+            clearInterval(timer);
+            timerDisplay.textContent = 30;
+            startButton.style.display = "inline";
+            restartButton.style.display = "none";
+            initializeBoard();
+        }
+
+        startButton.addEventListener("click", startGame);
+        restartButton.addEventListener("click", restartGame);
+
+        initializeBoard();
+    </script>
+</body>
+</html>
